@@ -1,0 +1,49 @@
+{
+  "name": "papalapa/laravel-query-filter",
+  "description": "API Query Filter for data providers (Eloquent models)",
+  "keywords": [
+    "Laravel",
+    "Eloquent",
+    "Query",
+    "API"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Dmitriy K.",
+      "email": "dmitriy.kim@mail.ru"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  },
+  "require": {
+    "php": "^8.0",
+    "ext-json": "*",
+    "illuminate/database": "^8.38",
+    "illuminate/http": "^8.38"
+  },
+  "suggest": {
+    "laravel/framework": "This package working with Laravel query builders"
+  },
+  "autoload": {
+    "classmap": [
+    ],
+    "psr-4": {
+      "Papalapa\\Laravel\\QueryFilter\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Papalapa\\Laravel\\QueryFilter\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": []
+    }
+  }
+}
