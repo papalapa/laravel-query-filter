@@ -4,63 +4,87 @@ namespace Papalapa\Laravel\QueryFilter;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Collection;
 
 final class ColumnSorter
 {
+    private const SORT_ASC = 'asc';
+
+    private const SORT_DESC = 'desc';
+
     private AttributeMapper $mapper;
 
+    private Collection $sorting;
+
     public function __construct(
-        private Builder $builder,
         array $attributesMap = [],
-        private array $default = [],
-        private array $final = [],
+        private array $defaultSorting = [],
+        private array $finalSorting = [],
     ) {
         $this->mapper = new AttributeMapper($attributesMap);
     }
 
-    public function sort(?string $sorting = null, ?string $ordering = null) : Builder
+    public function sort(?string $sorting = null, ?string $ordering = null): self
     {
+        $this->sorting = new Collection();
+
         if (isset($sorting)) {
             $this->useRequestedSort($sorting, $ordering);
         } else {
-            $this->useInternalSort($this->default);
+            $this->useInternalSort($this->defaultSorting);
         }
+        $this->useInternalSort($this->finalSorting);
 
-        $this->useInternalSort($this->final);
-
-        return $this->builder;
+        return $this;
     }
 
-    private function useRequestedSort(string $sorting, ?string $ordering) : void
+    public function getDirection(string $attribute): ?string
     {
-        $sortAttributes = explode(',', $sorting);
-        foreach ($sortAttributes as $attribute) {
+        if ($this->sorting->has($attribute)) {
+            return $this->sorting->get($attribute);
+        }
+
+        return null;
+    }
+
+    public function apply(Builder $builder): Builder
+    {
+        foreach ($this->sorting as $column => $direction) {
+            $builder->orderBy(new Expression($column), $direction);
+        }
+
+        return $builder;
+    }
+
+    private function useRequestedSort(string $sorting, ?string $ordering): void
+    {
+        $attributes = explode(',', $sorting);
+        foreach ($attributes as $attribute) {
             if (str_starts_with($attribute, '-')) {
                 $attribute = substr($attribute, 1);
-                $order = 'desc';
+                $order = self::SORT_DESC;
             }
-            $direction = $this->defineDirection($ordering ?? $order ?? 'asc');
             $columns = $this->mapper->resolve($attribute);
+            $direction = $this->defineDirection($ordering ?? $order ?? self::SORT_ASC);
             foreach ($columns as $column) {
-                $this->builder->orderBy(new Expression($column), $direction);
+                $this->sorting->put($column, $direction);
             }
         }
     }
 
-    private function useInternalSort(array $default) : void
+    private function useInternalSort(array $default): void
     {
         foreach ($default as $key => $value) {
             if (is_string($key)) {
-                $direction = $this->defineDirection($value);
-                $this->builder->orderBy(new Expression($key), $direction);
+                $this->sorting->put($key, $this->defineDirection($value));
             } else {
-                $this->builder->orderBy(new Expression($value));
+                $this->sorting->put($value, self::SORT_ASC);
             }
         }
     }
 
-    private function defineDirection(string $direction) : string
+    private function defineDirection(string $direction): string
     {
-        return $direction === 'desc' ? 'desc' : 'asc';
+        return ($direction === self::SORT_DESC) ? self::SORT_DESC : self::SORT_ASC;
     }
 }

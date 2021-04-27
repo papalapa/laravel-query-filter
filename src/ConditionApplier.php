@@ -25,23 +25,20 @@ use Illuminate\Database\Query\Expression;
  */
 final class ConditionApplier
 {
-    private AttributeMapper $attributeMapper;
+    private AttributeMapper $mapper;
 
-    private FilterNormalizer $filterNormalizer;
-
-    public function __construct(
-        private Builder $builder,
-        array $attributesMap = [],
-    ) {
-        $this->attributeMapper = new AttributeMapper($attributesMap);
-        $this->filterNormalizer = new FilterNormalizer();
+    public function __construct(array $attributesMap = [])
+    {
+        $this->mapper = new AttributeMapper($attributesMap);
     }
 
-    public function filter(mixed $filter): void
+    public function filter(Builder $builder, mixed $filter): Builder
     {
-        $filterData = $this->filterNormalizer->normalize($filter);
-        $this->builder->where(function (Builder $builder) use ($filterData) {
-            $this->applyConditions($builder, $filterData);
+        $normalizer = new FilterNormalizer();
+        $data = $normalizer->normalize($filter);
+
+        return $builder->where(function (Builder $builder) use ($data) {
+            $this->applyConditions($builder, $data);
         });
     }
 
@@ -60,47 +57,34 @@ final class ConditionApplier
                         });
                     }
                 }
+            } elseif (is_bool($value)) {
+                $columns = $this->mapper->resolve($key);
+                foreach ($columns as $column) {
+                    $builder->where($column, '=', $value);
+                }
             } elseif ($key === 'is null') {
-                $columns = $this->attributeMapper->resolve($value);
+                $columns = $this->mapper->resolve($value);
                 foreach ($columns as $column) {
                     $builder->whereNull($column);
                 }
             } elseif ($key === 'is not null') {
-                $columns = $this->attributeMapper->resolve($value);
+                $columns = $this->mapper->resolve($value);
                 foreach ($columns as $column) {
                     $builder->whereNotNull($column);
                 }
             } else {
-                $columns = $this->attributeMapper->resolve($key);
+                $columns = $this->mapper->resolve($key);
                 $builder->where(function (Builder $builder) use ($columns, $value) {
+                    $condition = new ConditionResolver((string)$value);
                     foreach ($columns as $column) {
-                        $builder->orWhere(... $this->makeCondition($column, (string)$value));
+                        $builder->orWhere(
+                            column: new Expression($column),
+                            operator: $condition->operator(),
+                            value: $condition->value(),
+                        );
                     }
                 });
             }
         }
-    }
-
-    private function makeCondition(string $attribute, string $value): array
-    {
-        if (preg_match('/^(<>|>=|!=|<=|>|=|<|!|~|\*|\^|\$)/', $value, $matches)) {
-            $operator = $matches[1];
-            $value = substr($value, strlen($operator));
-            if ($operator === '~') {
-                $operator = 'NOT LIKE';
-                $value = "%{$value}%";
-            } elseif ($operator === '*') {
-                $operator = 'LIKE';
-                $value = "%{$value}%";
-            } elseif ($operator === '^') {
-                $operator = 'LIKE';
-                $value = "{$value}%";
-            } elseif ($operator === '$') {
-                $operator = 'LIKE';
-                $value = "%{$value}";
-            }
-        }
-
-        return [new Expression($attribute), $operator ?? '=', $value];
     }
 }

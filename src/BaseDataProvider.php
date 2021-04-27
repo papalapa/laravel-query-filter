@@ -57,42 +57,42 @@ abstract class BaseDataProvider
         return $this->builder;
     }
 
-    public function all(): Collection
+    final public function all(): Collection
     {
         $this->handleRequest($this->request);
 
         return Collection::make($this->builder->get());
     }
 
-    public function paginated(): LengthAwarePaginator
+    final public function paginated(): LengthAwarePaginator
     {
         $this->handleRequest($this->request);
 
         $paginator = new Paginator(
-            $this->builder,
-            $this->defaultPageNumber,
-            $this->defaultPerPageLimit
+            builder: $this->builder,
+            defaultPageNumber: $this->defaultPageNumber,
+            defaultPerPageLimit: $this->defaultPerPageLimit
         );
 
         return $paginator->paginate(
-            $this->request->get(self::ATTRIBUTE_LIMIT),
-            $this->request->get(self::ATTRIBUTE_PAGE)
+            limit: $this->request->get(self::ATTRIBUTE_LIMIT),
+            page: $this->request->get(self::ATTRIBUTE_PAGE)
         );
     }
 
-    public function handleRequest(Request $request): void
+    private function handleRequest(Request $request): void
     {
         $this->withHaving($request->get(self::ATTRIBUTE_HAS));
         $this->withRelations($request->get(self::ATTRIBUTE_WITH));
         $this->withCounts($request->get(self::ATTRIBUTE_COUNT));
         $this->applyFilterConditions($request->get(self::ATTRIBUTE_FILTER));
         $this->applyFilterSorting(
-            $request->get(self::ATTRIBUTE_SORT),
-            $request->get(self::ATTRIBUTE_ORDER)
+            sort: $request->get(self::ATTRIBUTE_SORT),
+            order: $request->get(self::ATTRIBUTE_ORDER)
         );
     }
 
-    protected function withHaving(?string $requested, string $separator = ','): void
+    private function withHaving(?string $requested, string $separator = ','): void
     {
         if (isset($requested) && count($this->allowedHaving)) {
             $having = explode($separator, $requested);
@@ -103,7 +103,7 @@ abstract class BaseDataProvider
         }
     }
 
-    protected function withRelations(?string $requested, string $separator = ','): void
+    private function withRelations(?string $requested, string $separator = ','): void
     {
         if (isset($requested) && count($this->allowedRelations)) {
             $relations = explode($separator, $requested);
@@ -112,7 +112,7 @@ abstract class BaseDataProvider
         }
     }
 
-    protected function withCounts(?string $requested, string $separator = ','): void
+    private function withCounts(?string $requested, string $separator = ','): void
     {
         if (isset($requested) && count($this->allowedCounts)) {
             $counts = explode($separator, $requested);
@@ -121,21 +121,19 @@ abstract class BaseDataProvider
         }
     }
 
-    protected function applyFilterConditions(mixed $filter): void
+    private function applyFilterConditions(mixed $filter): void
     {
         (new ConditionApplier(
-            $this->builder,
-            $this->allowedFilter
-        ))->filter($filter);
+            attributesMap: $this->allowedFilter
+        ))->filter($this->builder, $filter);
     }
 
-    protected function applyFilterSorting(mixed $sort, mixed $order): void
+    private function applyFilterSorting(mixed $sort, mixed $order): void
     {
         (new ColumnSorter(
-            $this->builder,
-            $this->allowedSort,
-            $this->defaultSort,
-            $this->finalSort
-        ))->sort($sort, $order);
+            attributesMap: $this->allowedSort,
+            defaultSorting: $this->defaultSort,
+            finalSorting: $this->finalSort,
+        ))->sort($sort, $order)->apply($this->builder);
     }
 }
