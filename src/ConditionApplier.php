@@ -77,11 +77,17 @@ final class ConditionApplier
                 $builder->where(function (Builder $builder) use ($columns, $value) {
                     $condition = new ConditionResolver($value);
                     foreach ($columns as $column) {
-                        $builder->orWhere(
-                            column: new Expression($column),
-                            operator: $condition->operator(),
-                            value: $condition->value(),
-                        );
+                        if ($condition->isNull()) {
+                            $builder->orWhereNull(column: new Expression($column));
+                        } elseif ($condition->isNotNull()) {
+                            $builder->orWhereNotNull(column: new Expression($column));
+                        } else {
+                            $builder->orWhere(
+                                column: new Expression($column),
+                                operator: $condition->operator(),
+                                value: $condition->value(),
+                            );
+                        }
                     }
                 });
             }

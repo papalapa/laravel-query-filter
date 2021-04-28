@@ -4,6 +4,10 @@ namespace Papalapa\Laravel\QueryFilter;
 
 final class ConditionResolver
 {
+    public const IS_NULL = 'IS';
+
+    public const IS_NOT_NULL = 'IS NOT';
+
     public function __construct(
         private ?string $value,
         private string $operator = '=',
@@ -16,6 +20,16 @@ final class ConditionResolver
         return $this->operator;
     }
 
+    public function isNull(): bool
+    {
+        return $this->operator === self::IS_NULL;
+    }
+
+    public function isNotNull(): bool
+    {
+        return $this->operator === self::IS_NOT_NULL;
+    }
+
     public function value(): ?string
     {
         return $this->value;
@@ -24,12 +38,12 @@ final class ConditionResolver
     private function process(?string $value): void
     {
         if (is_null($value)) {
-            $this->operator = 'IS';
+            $this->operator = self::IS_NULL;
             return;
         }
 
         if ($value === '~') {
-            $this->operator = 'IS NOT';
+            $this->operator = self::IS_NOT_NULL;
             $this->value = null;
             return;
         }
