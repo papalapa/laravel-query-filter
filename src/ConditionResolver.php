@@ -5,7 +5,7 @@ namespace Papalapa\Laravel\QueryFilter;
 final class ConditionResolver
 {
     public function __construct(
-        private string $value,
+        private ?string $value,
         private string $operator = '=',
     ) {
         $this->process($this->value);
@@ -16,20 +16,28 @@ final class ConditionResolver
         return $this->operator;
     }
 
-    public function value(): string
+    public function value(): ?string
     {
         return $this->value;
     }
 
     private function process(?string $value): void
     {
-        if (preg_match('/^(<>|>=|!=|<=|>|=|<|!|~|\*|\^|\$)/', $value, $matches)) {
+        if (is_null($value)) {
+            $this->operator = 'IS';
+            return;
+        }
+
+        if ($value === '~') {
+            $this->operator = 'IS NOT';
+            $this->value = null;
+            return;
+        }
+
+        if (preg_match('/^(<>|>=|!=|<=|>|=|<|!|\*|\^|\$)/', $value, $matches)) {
             $operator = $matches[1];
             $value = substr($value, strlen($operator));
             if ($operator === '!') {
-                $this->operator = 'NOT LIKE';
-                $this->value = "%{$value}%";
-            } elseif ($operator === '~') {
                 $this->operator = 'NOT LIKE';
                 $this->value = "%{$value}%";
             } elseif ($operator === '*') {

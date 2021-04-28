@@ -16,11 +16,15 @@ class ConditionResolverTest extends TestCase
             self::assertEquals('username', $resolver->value());
         }
 
-        $resolver = new ConditionResolver('!username');
-        self::assertEquals('NOT LIKE', $resolver->operator());
-        self::assertEquals('%username%', $resolver->value());
+        $resolver = new ConditionResolver(null);
+        self::assertEquals('IS', $resolver->operator());
+        self::assertEquals(null, $resolver->value());
 
-        $resolver = new ConditionResolver('~username');
+        $resolver = new ConditionResolver('~');
+        self::assertEquals('IS NOT', $resolver->operator());
+        self::assertEquals(null, $resolver->value());
+
+        $resolver = new ConditionResolver('!username');
         self::assertEquals('NOT LIKE', $resolver->operator());
         self::assertEquals('%username%', $resolver->value());
 

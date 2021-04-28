@@ -75,7 +75,7 @@ final class ConditionApplier
             } else {
                 $columns = $this->mapper->resolve($key);
                 $builder->where(function (Builder $builder) use ($columns, $value) {
-                    $condition = new ConditionResolver((string)$value);
+                    $condition = new ConditionResolver($value);
                     foreach ($columns as $column) {
                         $builder->orWhere(
                             column: new Expression($column),
