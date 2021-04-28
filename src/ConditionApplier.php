@@ -65,12 +65,12 @@ final class ConditionApplier
             } elseif ($key === 'is null') {
                 $columns = $this->mapper->resolve($value);
                 foreach ($columns as $column) {
-                    $builder->whereNull($column);
+                    $builder->whereNull(new Expression($column));
                 }
             } elseif ($key === 'is not null') {
                 $columns = $this->mapper->resolve($value);
                 foreach ($columns as $column) {
-                    $builder->whereNotNull($column);
+                    $builder->whereNotNull(new Expression($column));
                 }
             } else {
                 $columns = $this->mapper->resolve($key);
