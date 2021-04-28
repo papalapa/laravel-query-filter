@@ -60,7 +60,7 @@ final class ConditionApplier
             } elseif (is_bool($value)) {
                 $columns = $this->mapper->resolve($key);
                 foreach ($columns as $column) {
-                    $builder->where($column, '=', $value);
+                    $builder->where(new Expression($column), '=', $value);
                 }
             } elseif ($key === 'is null') {
                 $columns = $this->mapper->resolve($value);
@@ -78,9 +78,9 @@ final class ConditionApplier
                     $condition = new ConditionResolver($value);
                     foreach ($columns as $column) {
                         if ($condition->isNull()) {
-                            $builder->orWhereNull(column: new Expression($column));
+                            $builder->orWhereNull(new Expression($column));
                         } elseif ($condition->isNotNull()) {
-                            $builder->orWhereNotNull(column: new Expression($column));
+                            $builder->orWhereNotNull(new Expression($column));
                         } else {
                             $builder->orWhere(
                                 column: new Expression($column),
