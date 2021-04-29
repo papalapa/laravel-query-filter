@@ -5,24 +5,6 @@ namespace Papalapa\Laravel\QueryFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 
-/**
- * Allowed filter format (json|array):
- * -----------------------------------
- * {
- *      "and": [
- *          {"name": "*Frank"},
- *          {"is null": "deleted_at"},
- *          {"is not null": "logon_at"},
- *          {
- *              "or": [
- *                  {"role": "~admin"},
- *                  {"active": true}
- *              ]
- *          }
- *      ]
- * }
- * -----------------------------------
- */
 final class ConditionApplier
 {
     private AttributeMapper $mapper;
