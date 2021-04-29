@@ -129,7 +129,7 @@ WHERE
       ((role = 'admin') OR (role = 'manager'))
       AND
       ((created_at >= '2021-01-01') AND (created_at <= '2021-02-01'))
-ORDER BY created_at ASC, lastname DESC, firstname DESC 
+ORDER BY created_at ASC, lastname DESC, firstname DESC, created_at DESC 
 LIMIT 50 OFFSET 50
 ```
 
