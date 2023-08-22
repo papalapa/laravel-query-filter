@@ -43,17 +43,20 @@ abstract class BaseDataProvider
 
     protected array $allowedCounts = [];
 
-    private EloquentBuilder $builder;
+    private ?EloquentBuilder $builder = null;
 
     public function __construct(protected Request $request)
     {
-        $this->builder = $this->makeBuilder();
     }
 
     abstract protected function makeBuilder(): EloquentBuilder;
 
     final public function builder(): EloquentBuilder
     {
+        if ($this->builder === null) {
+            $this->builder = $this->makeBuilder();
+        }
+
         return $this->builder;
     }
 
@@ -61,7 +64,7 @@ abstract class BaseDataProvider
     {
         $this->handleRequest($this->request);
 
-        return Collection::make($this->builder->get());
+        return Collection::make($this->builder()->get());
     }
 
     final public function paginated(): LengthAwarePaginator
@@ -69,7 +72,7 @@ abstract class BaseDataProvider
         $this->handleRequest($this->request);
 
         $paginator = new Paginator(
-            builder: $this->builder,
+            builder: $this->builder(),
             defaultPageNumber: $this->defaultPageNumber,
             defaultPerPageLimit: $this->defaultPerPageLimit
         );
@@ -98,7 +101,7 @@ abstract class BaseDataProvider
             $having = explode($separator, $requested);
             $having = array_intersect($this->allowedHaving, $having);
             foreach ($having as $relation) {
-                $this->builder->has($relation);
+                $this->builder()->has($relation);
             }
         }
     }
@@ -108,7 +111,7 @@ abstract class BaseDataProvider
         if (isset($requested) && count($this->allowedRelations)) {
             $relations = explode($separator, $requested);
             $relations = array_intersect($this->allowedRelations, $relations);
-            $this->builder->with($relations);
+            $this->builder()->with($relations);
         }
     }
 
@@ -117,7 +120,7 @@ abstract class BaseDataProvider
         if (isset($requested) && count($this->allowedCounts)) {
             $counts = explode($separator, $requested);
             $counts = array_intersect($this->allowedCounts, $counts);
-            $this->builder->withCount($counts);
+            $this->builder()->withCount($counts);
         }
     }
 
@@ -125,7 +128,7 @@ abstract class BaseDataProvider
     {
         (new ConditionApplier(
             attributesMap: $this->allowedFilter
-        ))->filter($this->builder, $filter);
+        ))->filter($this->builder(), $filter);
     }
 
     private function applyFilterSorting(mixed $sort, mixed $order): void
@@ -134,6 +137,6 @@ abstract class BaseDataProvider
             attributesMap: $this->allowedSort,
             defaultSorting: $this->defaultSort,
             finalSorting: $this->finalSort,
-        ))->sort($sort, $order)->apply($this->builder);
+        ))->sort($sort, $order)->apply($this->builder());
     }
 }
