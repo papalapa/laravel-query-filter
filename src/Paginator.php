@@ -21,12 +21,7 @@ final class Paginator
         $page = $this->resolvePage($page);
 
         if ($page > 1) {
-            /**
-             * Seems that `$total = $this->builder->count();` can be used as count of results.
-             * But it does not work if using `groupBy(...)`. And still works without grouping.
-             */
-            $total = DB::connection()->table($this->builder->getQuery())->count();
-            $page = (int)min(ceil($total / $limit), $page);
+            $page = (int)min(ceil($this->builder->count() / $limit), $page);
         }
 
         return $this->builder->paginate($limit, ['*'], '_page', $page);
