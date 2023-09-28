@@ -5,7 +5,7 @@ namespace Papalapa\Laravel\QueryFilter;
 final class AttributeMapper
 {
     public function __construct(
-        private array $map
+        private array $map,
     ) {
     }
 

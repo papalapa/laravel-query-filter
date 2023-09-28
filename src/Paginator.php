@@ -11,7 +11,7 @@ final class Paginator
     public function __construct(
         private Builder $builder,
         private int $defaultPageNumber,
-        private int $defaultPerPageLimit
+        private int $defaultPerPageLimit,
     ) {
     }
 

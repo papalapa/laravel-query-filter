@@ -10,7 +10,7 @@ class FilterNormalizerTest extends TestCase
     public function test(): void
     {
         $expected = [
-            'and' => [
+            'and'   => [
                 ['username' => 'admin'],
                 ['is not null' => 'role'],
                 ['is null' => 'deleted_at'],
@@ -21,10 +21,15 @@ class FilterNormalizerTest extends TestCase
                     ],
                 ],
             ],
+            'or'    => [
+                ['created_at' => '>=1970-01-01 00:00:00'],
+                ['updated_at' => '>=1970-01-01 00:00:00'],
+            ],
+            'email' => '*@gmail.com',
         ];
 
         $arrayFilter = $expected;
-        $jsonFilter = json_encode($arrayFilter, JSON_THROW_ON_ERROR);
+        $jsonFilter  = json_encode($arrayFilter, JSON_THROW_ON_ERROR);
 
         $normalizer = new FilterNormalizer();
 
