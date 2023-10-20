@@ -139,12 +139,11 @@ abstract class BaseDataProvider
 
     private function applyFilterSorting(mixed $sort, mixed $order, string $delimiter): void
     {
-        if (isset($sort) || isset($order)) {
-            (new ColumnSorter(
-                attributesMap: $this->allowedSort,
-                defaultSorting: $this->defaultSort,
-                finalSorting: $this->finalSort,
-            ))->sort($sort, $order, $delimiter)->apply($this->builder());
-        }
+        (new ColumnSorter(
+            attributesMap: $this->allowedSort,
+            defaultSorting: $this->defaultSort,
+            finalSorting: $this->finalSort,
+        ))->sort($sort, $order, $delimiter)
+            ->apply($this->builder());
     }
 }
