@@ -2,7 +2,7 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 
 final class ConditionApplier
@@ -17,7 +17,7 @@ final class ConditionApplier
     public function filter(Builder $builder, mixed $filter): Builder
     {
         $normalizer = new FilterNormalizer();
-        $data = $normalizer->normalize($filter);
+        $data       = $normalizer->normalize($filter);
 
         return $builder->where(function (Builder $builder) use ($data) {
             $this->applyConditions($builder, $data);

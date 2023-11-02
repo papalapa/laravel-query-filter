@@ -2,8 +2,8 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Query\Builder;
 
 final class Paginator
 {
@@ -14,25 +14,25 @@ final class Paginator
     ) {
     }
 
-    public function paginate(mixed $limit, mixed $page) : LengthAwarePaginator
+    public function paginate(mixed $limit, mixed $page): LengthAwarePaginator
     {
         $limit = $this->resolveLimit($limit);
-        $page = $this->resolvePage($page);
+        $page  = $this->resolvePage($page);
 
         if ($page > 1) {
-            $page = (int)min(ceil($this->builder->count() / $limit), $page);
+            $page = (int) min(ceil($this->builder->count() / $limit), $page);
         }
 
         return $this->builder->paginate($limit, ['*'], '_page', $page);
     }
 
-    private function resolveLimit(mixed $limit) : int
+    private function resolveLimit(mixed $limit): int
     {
-        return max((int)$limit, 0) ?: $this->defaultPerPageLimit;
+        return max((int) $limit, 0) ?: $this->defaultPerPageLimit;
     }
 
-    private function resolvePage(mixed $page) : int
+    private function resolvePage(mixed $page): int
     {
-        return max((int)$page, 0) ?: $this->defaultPageNumber;
+        return max((int) $page, 0) ?: $this->defaultPageNumber;
     }
 }

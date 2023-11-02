@@ -2,7 +2,7 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 
