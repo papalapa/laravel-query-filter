@@ -3,7 +3,7 @@
 namespace Papalapa\Laravel\QueryFilter;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -45,15 +45,15 @@ abstract class BaseDataProvider
 
     protected array $allowedCounts = [];
 
-    private ?EloquentBuilder $builder = null;
+    private ?Builder $builder = null;
 
     public function __construct(protected Request $request)
     {
     }
 
-    abstract protected function makeBuilder(): EloquentBuilder;
+    abstract protected function makeBuilder(): Builder;
 
-    final public function builder(): EloquentBuilder
+    final public function builder(): Builder
     {
         if ($this->builder === null) {
             $this->builder = $this->makeBuilder();

@@ -2,7 +2,7 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 
 final class ConditionApplier

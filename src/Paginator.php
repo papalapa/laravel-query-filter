@@ -3,8 +3,7 @@
 namespace Papalapa\Laravel\QueryFilter;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Query\Builder;
 
 final class Paginator
 {
