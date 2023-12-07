@@ -11,17 +11,16 @@ class AttributeMapperTest extends TestCase
     {
         $map = [
             /* field alias => real field name */
-            'id' => 'users.id',
+            'id'       => 'users.id',
             'username' => 'users.username',
-            'name' => ['users.firstname', 'users.lastname'],
+            'name'     => ['users.firstname', 'users.lastname'],
         ];
 
-        $mapper = new AttributeMapper($map);
+        $mapper = (new AttributeMapper())->load($map);
 
         self::assertEquals(['users.id'], $mapper->resolve('id'));
         self::assertEquals(['users.username'], $mapper->resolve('username'));
         self::assertEquals(['users.firstname', 'users.lastname'], $mapper->resolve('name'));
-
-        self::assertEquals([], $mapper->resolve('not_supported_field'));
+        self::assertEquals([], $mapper->resolve('unknown_field'));
     }
 }

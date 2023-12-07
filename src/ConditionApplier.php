@@ -5,28 +5,32 @@ namespace Papalapa\Laravel\QueryFilter;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 
-final class ConditionApplier
+class ConditionApplier
 {
-    private AttributeMapper $mapper;
-
-    public function __construct(array $attributesMap = [])
-    {
-        $this->mapper = new AttributeMapper($attributesMap);
+    public function __construct(
+        private AttributeMapper $mapper,
+        private FilterNormalizer $filterNormalizer,
+    ) {
     }
 
-    public function filter(Builder $builder, mixed $filter): Builder
+    public function useMap(array $map): static
     {
-        $normalizer = new FilterNormalizer();
-        $data       = $normalizer->normalize($filter);
+        $this->mapper->load($map);
 
-        return $builder->where(function (Builder $builder) use ($data) {
-            $this->applyConditions($builder, $data);
+        return $this;
+    }
+
+    public function filter(Builder $builder, string|array $filter): Builder
+    {
+        return $builder->where(function (Builder $builder) use ($filter) {
+            $conditions = $this->filterNormalizer->normalize($filter);
+            $this->applyConditions($builder, $conditions);
         });
     }
 
-    private function applyConditions(Builder $builder, array $data): void
+    private function applyConditions(Builder $builder, array $conditions): void
     {
-        foreach ($data as $key => $value) {
+        foreach ($conditions as $key => $value) {
             if (is_array($value)) {
                 foreach ($value as $item) {
                     if ($key === 'and') {

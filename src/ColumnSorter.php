@@ -6,32 +6,72 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 
-final class ColumnSorter
+class ColumnSorter
 {
-    private const SORT_ASC = 'asc';
+    public const SORT_ASC = 'asc';
 
-    private const SORT_DESC = 'desc';
+    public const SORT_DESC = 'desc';
 
-    private const DIRECTION_INVERSION = '-';
+    public const DIRECTION_INVERSION = '-';
 
-    private AttributeMapper $mapper;
+    private string $asc = self::SORT_ASC;
+
+    private string $desc = self::SORT_DESC;
+
+    private string $inversion = self::DIRECTION_INVERSION;
+
+    private array $defaultSorting = [];
+
+    private array $finalSorting = [];
 
     private Collection $sorting;
 
-    public function __construct(
-        array $attributesMap = [],
-        private array $defaultSorting = [],
-        private array $finalSorting = [],
-    ) {
-        $this->mapper = new AttributeMapper($attributesMap);
+    public function __construct(private AttributeMapper $mapper)
+    {
     }
 
-    public function sort(?string $sorting = null, ?string $ordering = null, string $delimiter = ','): self
+    public function useMap(array $map): self
     {
+        $this->mapper->load($map);
+
+        return $this;
+    }
+
+    public function useFlags(
+        string $asc = self::SORT_ASC,
+        string $desc = self::SORT_DESC,
+        string $inversion = self::DIRECTION_INVERSION,
+    ): self {
+        $this->asc       = $asc;
+        $this->desc      = $desc;
+        $this->inversion = $inversion;
+
+        return $this;
+    }
+
+    public function setDefaultSorting(array $data): self
+    {
+        $this->defaultSorting = $data;
+
+        return $this;
+    }
+
+    public function setFinalSorting(array $data): self
+    {
+        $this->finalSorting = $data;
+
+        return $this;
+    }
+
+    public function sort(
+        ?string $requestedSorting = null,
+        ?string $requestedOrdering = null,
+        string $columnDelimiter = ','
+    ): self {
         $this->sorting = new Collection();
 
-        if (isset($sorting)) {
-            $this->useRequestedSort($sorting, $ordering, $delimiter);
+        if (isset($requestedSorting)) {
+            $this->useRequestedSort($requestedSorting, $requestedOrdering, $columnDelimiter);
         } else {
             $this->useInternalSort($this->defaultSorting);
         }
@@ -62,12 +102,12 @@ final class ColumnSorter
     {
         $attributes = explode($delimiter, $sorting);
         foreach ($attributes as $attribute) {
-            if (str_starts_with($attribute, self::DIRECTION_INVERSION)) {
+            if (str_starts_with($attribute, $this->inversion)) {
                 $attribute = substr($attribute, 1);
-                $order     = self::SORT_DESC;
+                $order     = $this->desc;
             }
             $columns   = $this->mapper->resolve($attribute);
-            $direction = $this->defineDirection($ordering ?? $order ?? self::SORT_ASC);
+            $direction = $this->defineDirection($ordering ?? $order ?? $this->asc);
             foreach ($columns as $column) {
                 $this->sorting->put($column, $direction);
             }
@@ -80,13 +120,13 @@ final class ColumnSorter
             if (is_string($key)) {
                 $this->sorting->put($key, $this->defineDirection($value));
             } else {
-                $this->sorting->put($value, self::SORT_ASC);
+                $this->sorting->put($value, $this->asc);
             }
         }
     }
 
     private function defineDirection(string $direction): string
     {
-        return ($direction === self::SORT_DESC) ? self::SORT_DESC : self::SORT_ASC;
+        return ($direction === $this->desc) ? $this->desc : $this->asc;
     }
 }

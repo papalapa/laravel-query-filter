@@ -9,23 +9,29 @@ use Illuminate\Support\Collection;
 
 abstract class BaseDataProvider
 {
-    private const ATTRIBUTE_HAS = '_has';
+    protected const ATTRIBUTE_HAS = '_has';
 
-    private const ATTRIBUTE_COUNT = '_count';
+    protected const ATTRIBUTE_COUNT = '_count';
 
-    private const ATTRIBUTE_WITH = '_with';
+    protected const ATTRIBUTE_WITH = '_with';
 
-    private const ATTRIBUTE_FILTER = '_filter';
+    protected const ATTRIBUTE_FILTER = '_filter';
 
-    private const ATTRIBUTE_SORT = '_sort';
+    protected const ATTRIBUTE_SORT = '_sort';
 
-    private const ATTRIBUTE_ORDER = '_order';
+    protected const ATTRIBUTE_ORDER = '_order';
 
-    private const ATTRIBUTE_PAGE = '_page';
+    protected const ATTRIBUTE_PAGE = '_page';
 
-    private const ATTRIBUTE_LIMIT = '_limit';
+    protected const ATTRIBUTE_LIMIT = '_limit';
 
     protected const DEFAULT_DELIMITER = ',';
+
+    protected const SORT_ASC = ColumnSorter::SORT_ASC;
+
+    protected const SORT_DESC = ColumnSorter::SORT_DESC;
+
+    protected const SORT_INVERSION = ColumnSorter::DIRECTION_INVERSION;
 
     protected int $defaultPageNumber = 1;
 
@@ -47,8 +53,12 @@ abstract class BaseDataProvider
 
     private ?Builder $builder = null;
 
-    public function __construct(protected Request $request)
-    {
+    final public function __construct(
+        protected Request $request,
+        private Paginator $paginator,
+        private ConditionApplier $conditionApplier,
+        private ColumnSorter $columnSorter,
+    ) {
     }
 
     abstract protected function makeBuilder(): Builder;
@@ -73,77 +83,100 @@ abstract class BaseDataProvider
     {
         $this->handleRequest($this->request);
 
-        $paginator = new Paginator(
-            builder: $this->builder(),
-            defaultPageNumber: $this->defaultPageNumber,
-            defaultPerPageLimit: $this->defaultPerPageLimit,
-        );
-
-        return $paginator->paginate(
-            limit: $this->request->input(self::ATTRIBUTE_LIMIT),
-            page: $this->request->input(self::ATTRIBUTE_PAGE)
-        );
+        return $this->paginator
+            ->setPageNumber(
+                value: $this->request->input(static::ATTRIBUTE_PAGE),
+                default: $this->defaultPageNumber,
+            )
+            ->setPageLimit(
+                value: $this->request->input(static::ATTRIBUTE_LIMIT),
+                default: $this->defaultPerPageLimit,
+            )
+            ->paginate(
+                builder: $this->builder(),
+                pageName: static::ATTRIBUTE_PAGE,
+            );
     }
 
     private function handleRequest(Request $request): void
     {
-        $this->withHaving($request->input(self::ATTRIBUTE_HAS), static::DEFAULT_DELIMITER);
-        $this->withRelations($request->input(self::ATTRIBUTE_WITH), static::DEFAULT_DELIMITER);
-        $this->withCounts($request->input(self::ATTRIBUTE_COUNT), static::DEFAULT_DELIMITER);
+        $this->withHaving($request->input(static::ATTRIBUTE_HAS));
+        $this->withRelations($request->input(static::ATTRIBUTE_WITH));
+        $this->withCounts($request->input(static::ATTRIBUTE_COUNT));
 
-        $this->applyFilterConditions($request->input(self::ATTRIBUTE_FILTER));
+        $this->applyFilterConditions($request->input(static::ATTRIBUTE_FILTER));
         $this->applyFilterSorting(
-            sort: $request->input(self::ATTRIBUTE_SORT),
-            order: $request->input(self::ATTRIBUTE_ORDER),
-            delimiter: static::DEFAULT_DELIMITER,
+            sort: $request->input(static::ATTRIBUTE_SORT),
+            order: $request->input(static::ATTRIBUTE_ORDER),
         );
     }
 
-    private function withHaving(mixed $requested, string $delimiter): void
+    private function withHaving(mixed $requested): void
     {
         if (isset($requested) && is_string($requested) && count($this->allowedHaving)) {
-            $having = explode($delimiter, $requested);
-            $having = array_intersect($this->allowedHaving, $having);
-            foreach ($having as $relation) {
-                $this->builder()->has($relation);
+            $having  = explode(static::DEFAULT_DELIMITER, $requested);
+            $having  = array_intersect($this->allowedHaving, $having);
+            $builder = $this->builder();
+            if (method_exists($builder, 'has')) {
+                foreach ($having as $relation) {
+                    $builder->has($relation);
+                }
             }
         }
     }
 
-    private function withRelations(mixed $requested, string $delimiter): void
+    private function withRelations(mixed $requested): void
     {
         if (isset($requested) && is_string($requested) && count($this->allowedRelations)) {
-            $relations = explode($delimiter, $requested);
+            $relations = explode(static::DEFAULT_DELIMITER, $requested);
             $relations = array_intersect($this->allowedRelations, $relations);
-            $this->builder()->with($relations);
+            $builder   = $this->builder();
+            if (method_exists($builder, 'with')) {
+                $builder->with($relations);
+            }
         }
     }
 
-    private function withCounts(mixed $requested, string $delimiter): void
+    private function withCounts(mixed $requested): void
     {
         if (isset($requested) && is_string($requested) && count($this->allowedCounts)) {
-            $counts = explode($delimiter, $requested);
-            $counts = array_intersect($this->allowedCounts, $counts);
-            $this->builder()->withCount($counts);
+            $counts  = explode(static::DEFAULT_DELIMITER, $requested);
+            $counts  = array_intersect($this->allowedCounts, $counts);
+            $builder = $this->builder();
+            if (method_exists($builder, 'withCount')) {
+                $builder->withCount($counts);
+            }
         }
     }
 
     private function applyFilterConditions(mixed $filter): void
     {
-        if (isset($filter)) {
-            (new ConditionApplier(
-                attributesMap: $this->allowedFilter,
-            ))->filter($this->builder(), $filter);
+        if (isset($filter) && (is_string($filter) || is_array($filter))) {
+            $this->conditionApplier
+                ->useMap($this->allowedFilter)
+                ->filter(
+                    builder: $this->builder(),
+                    filter: $filter,
+                );
         }
     }
 
-    private function applyFilterSorting(mixed $sort, mixed $order, string $delimiter): void
+    private function applyFilterSorting(mixed $sort, mixed $order): void
     {
-        (new ColumnSorter(
-            attributesMap: $this->allowedSort,
-            defaultSorting: $this->defaultSort,
-            finalSorting: $this->finalSort,
-        ))->sort($sort, $order, $delimiter)
+        $this->columnSorter
+            ->useFlags(
+                asc: self::SORT_ASC,
+                desc: self::SORT_DESC,
+                inversion: self::SORT_INVERSION,
+            )
+            ->useMap($this->allowedSort)
+            ->setDefaultSorting($this->defaultSort)
+            ->setFinalSorting($this->finalSort)
+            ->sort(
+                requestedSorting: $sort,
+                requestedOrdering: $order,
+                columnDelimiter: static::DEFAULT_DELIMITER,
+            )
             ->apply($this->builder());
     }
 }

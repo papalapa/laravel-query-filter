@@ -5,34 +5,45 @@ namespace Papalapa\Laravel\QueryFilter;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-final class Paginator
+class Paginator
 {
-    public function __construct(
-        private Builder $builder,
-        private int $defaultPageNumber,
-        private int $defaultPerPageLimit,
-    ) {
+    private int $pageNumber;
+
+    private int $pageLimit;
+
+    public function setPageNumber(mixed $value, int $default): self
+    {
+        $this->pageNumber = $this->validatePositiveValue($value, $default);
+
+        return $this;
     }
 
-    public function paginate(mixed $limit, mixed $page): LengthAwarePaginator
+    public function setPageLimit(mixed $value, int $default): self
     {
-        $limit = $this->resolveLimit($limit);
-        $page  = $this->resolvePage($page);
+        $this->pageLimit = $this->validatePositiveValue($value, $default);
 
-        if ($page > 1) {
-            $page = (int) min(ceil($this->builder->count() / $limit), $page);
+        return $this;
+    }
+
+    private function validatePositiveValue(mixed $value, int $default): int
+    {
+        if (is_numeric($value)) {
+            return max((int) $value, 0) ?: $default;
         }
 
-        return $this->builder->paginate($limit, ['*'], '_page', $page);
+        return $default;
     }
 
-    private function resolveLimit(mixed $limit): int
+    public function paginate(Builder $builder, string $pageName): LengthAwarePaginator
     {
-        return max((int) $limit, 0) ?: $this->defaultPerPageLimit;
-    }
+        if (false === isset($this->pageNumber, $this->pageLimit)) {
+            throw new \LogicException('Attributes pageNumber and pageLimit must be configured');
+        }
 
-    private function resolvePage(mixed $page): int
-    {
-        return max((int) $page, 0) ?: $this->defaultPageNumber;
+        if ($this->pageNumber > 1) {
+            $this->pageNumber = (int) min(ceil($builder->count() / $this->pageLimit), $this->pageNumber);
+        }
+
+        return $builder->paginate($this->pageLimit, ['*'], $pageName, $this->pageNumber);
     }
 }

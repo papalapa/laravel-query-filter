@@ -7,6 +7,9 @@ use PHPUnit\Framework\TestCase;
 
 class FilterNormalizerTest extends TestCase
 {
+    /**
+     * @throws \JsonException
+     */
     public function test(): void
     {
         $expected = [

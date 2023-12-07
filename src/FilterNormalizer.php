@@ -2,9 +2,9 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-final class FilterNormalizer
+class FilterNormalizer
 {
-    public function normalize(string|array|null $filter) : array
+    public function normalize(string|array $filter) : array
     {
         $data = [];
 

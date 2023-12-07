@@ -2,7 +2,7 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-final class ConditionResolver
+class ConditionResolver
 {
     public const IS_NULL = 'IS';
 
