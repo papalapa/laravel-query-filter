@@ -6,7 +6,7 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 
-class ColumnSorter
+class Sorting
 {
     public const SORT_ASC = 'asc';
 
@@ -14,11 +14,11 @@ class ColumnSorter
 
     public const DIRECTION_INVERSION = '-';
 
-    private string $asc = self::SORT_ASC;
+    private string $asc;
 
-    private string $desc = self::SORT_DESC;
+    private string $desc;
 
-    private string $inversion = self::DIRECTION_INVERSION;
+    private string $inversion;
 
     private array $defaultSorting = [];
 
@@ -26,22 +26,22 @@ class ColumnSorter
 
     private Collection $sorting;
 
-    public function __construct(private AttributeMapper $mapper)
+    final public function __construct(private AttributeMapper $mapper)
     {
+        $this->asc       = static::SORT_ASC;
+        $this->desc      = static::SORT_DESC;
+        $this->inversion = static::DIRECTION_INVERSION;
     }
 
-    public function useMap(array $map): self
+    final public function useMap(array $map): self
     {
         $this->mapper->load($map);
 
         return $this;
     }
 
-    public function useFlags(
-        string $asc = self::SORT_ASC,
-        string $desc = self::SORT_DESC,
-        string $inversion = self::DIRECTION_INVERSION,
-    ): self {
+    final public function useFlags(string $asc, string $desc, string $inversion): self
+    {
         $this->asc       = $asc;
         $this->desc      = $desc;
         $this->inversion = $inversion;
@@ -49,21 +49,21 @@ class ColumnSorter
         return $this;
     }
 
-    public function setDefaultSorting(array $data): self
+    final public function setDefaultSorting(array $data): self
     {
         $this->defaultSorting = $data;
 
         return $this;
     }
 
-    public function setFinalSorting(array $data): self
+    final public function setFinalSorting(array $data): self
     {
         $this->finalSorting = $data;
 
         return $this;
     }
 
-    public function sort(
+    final public function sort(
         ?string $requestedSorting = null,
         ?string $requestedOrdering = null,
         string $columnDelimiter = ','
@@ -80,22 +80,22 @@ class ColumnSorter
         return $this;
     }
 
-    public function getDirection(string $attribute): ?string
-    {
-        if ($this->sorting->has($attribute)) {
-            return $this->sorting->get($attribute);
-        }
-
-        return null;
-    }
-
-    public function apply(Builder $builder): Builder
+    final public function apply(Builder $builder): Builder
     {
         foreach ($this->sorting as $column => $direction) {
             $builder->orderBy(new Expression($column), $direction);
         }
 
         return $builder;
+    }
+
+    final public function getDirection(string $attribute): ?string
+    {
+        if ($this->sorting->has($attribute)) {
+            return $this->sorting->get($attribute);
+        }
+
+        return null;
     }
 
     private function useRequestedSort(string $sorting, ?string $ordering, string $delimiter): void

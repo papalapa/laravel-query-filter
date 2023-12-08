@@ -5,20 +5,20 @@ namespace Papalapa\Laravel\QueryFilter;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class Paginator
+class Paginating
 {
     private int $pageNumber;
 
     private int $pageLimit;
 
-    public function setPageNumber(mixed $value, int $default): self
+    final public function setPageNumber(mixed $value, int $default): static
     {
         $this->pageNumber = $this->validatePositiveValue($value, $default);
 
         return $this;
     }
 
-    public function setPageLimit(mixed $value, int $default): self
+    final public function setPageLimit(mixed $value, int $default): static
     {
         $this->pageLimit = $this->validatePositiveValue($value, $default);
 

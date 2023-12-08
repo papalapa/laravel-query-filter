@@ -27,11 +27,11 @@ abstract class BaseDataProvider
 
     protected const DEFAULT_DELIMITER = ',';
 
-    protected const SORT_ASC = ColumnSorter::SORT_ASC;
+    protected const SORT_ASC = Sorting::SORT_ASC;
 
-    protected const SORT_DESC = ColumnSorter::SORT_DESC;
+    protected const SORT_DESC = Sorting::SORT_DESC;
 
-    protected const SORT_INVERSION = ColumnSorter::DIRECTION_INVERSION;
+    protected const SORT_INVERSION = Sorting::DIRECTION_INVERSION;
 
     protected int $defaultPageNumber = 1;
 
@@ -55,9 +55,10 @@ abstract class BaseDataProvider
 
     final public function __construct(
         protected Request $request,
-        private Paginator $paginator,
-        private ConditionApplier $conditionApplier,
-        private ColumnSorter $columnSorter,
+        private FilterNormalizer $filterNormalizer,
+        private Paginating $paginating,
+        private Filtering $filtering,
+        private Sorting $sorting,
     ) {
     }
 
@@ -83,7 +84,7 @@ abstract class BaseDataProvider
     {
         $this->handleRequest($this->request);
 
-        return $this->paginator
+        return $this->paginating
             ->setPageNumber(
                 value: $this->request->input(static::ATTRIBUTE_PAGE),
                 default: $this->defaultPageNumber,
@@ -100,15 +101,50 @@ abstract class BaseDataProvider
 
     private function handleRequest(Request $request): void
     {
-        $this->withHaving($request->input(static::ATTRIBUTE_HAS));
-        $this->withRelations($request->input(static::ATTRIBUTE_WITH));
-        $this->withCounts($request->input(static::ATTRIBUTE_COUNT));
-
-        $this->applyFilterConditions($request->input(static::ATTRIBUTE_FILTER));
-        $this->applyFilterSorting(
+        $this->applyFilterConditions(
+            conditions: $this->parseConditions($request),
+        );
+        $this->applySortAndOrder(
             sort: $request->input(static::ATTRIBUTE_SORT),
             order: $request->input(static::ATTRIBUTE_ORDER),
         );
+        $this->withHaving($request->input(static::ATTRIBUTE_HAS));
+        $this->withRelations($request->input(static::ATTRIBUTE_WITH));
+        $this->withCounts($request->input(static::ATTRIBUTE_COUNT));
+    }
+
+    protected function parseConditions(Request $request): array
+    {
+        return $this->filterNormalizer->normalize($request->input(static::ATTRIBUTE_FILTER));
+    }
+
+    private function applyFilterConditions(array $conditions): void
+    {
+        $this->filtering
+            ->useMap($this->allowedFilter)
+            ->filter(
+                builder: $this->builder(),
+                conditions: $conditions,
+            );
+    }
+
+    private function applySortAndOrder(mixed $sort, mixed $order): void
+    {
+        $this->sorting
+            ->useFlags(
+                asc: static::SORT_ASC,
+                desc: static::SORT_DESC,
+                inversion: static::SORT_INVERSION,
+            )
+            ->useMap($this->allowedSort)
+            ->setDefaultSorting($this->defaultSort)
+            ->setFinalSorting($this->finalSort)
+            ->sort(
+                requestedSorting: $sort,
+                requestedOrdering: $order,
+                columnDelimiter: static::DEFAULT_DELIMITER,
+            )
+            ->apply($this->builder());
     }
 
     private function withHaving(mixed $requested): void
@@ -147,36 +183,5 @@ abstract class BaseDataProvider
                 $builder->withCount($counts);
             }
         }
-    }
-
-    private function applyFilterConditions(mixed $filter): void
-    {
-        if (isset($filter) && (is_string($filter) || is_array($filter))) {
-            $this->conditionApplier
-                ->useMap($this->allowedFilter)
-                ->filter(
-                    builder: $this->builder(),
-                    filter: $filter,
-                );
-        }
-    }
-
-    private function applyFilterSorting(mixed $sort, mixed $order): void
-    {
-        $this->columnSorter
-            ->useFlags(
-                asc: self::SORT_ASC,
-                desc: self::SORT_DESC,
-                inversion: self::SORT_INVERSION,
-            )
-            ->useMap($this->allowedSort)
-            ->setDefaultSorting($this->defaultSort)
-            ->setFinalSorting($this->finalSort)
-            ->sort(
-                requestedSorting: $sort,
-                requestedOrdering: $order,
-                columnDelimiter: static::DEFAULT_DELIMITER,
-            )
-            ->apply($this->builder());
     }
 }

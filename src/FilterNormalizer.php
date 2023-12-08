@@ -4,7 +4,7 @@ namespace Papalapa\Laravel\QueryFilter;
 
 class FilterNormalizer
 {
-    public function normalize(string|array $filter) : array
+    public function normalize(mixed $filter) : array
     {
         $data = [];
 

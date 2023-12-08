@@ -2,7 +2,7 @@
 
 namespace Papalapa\Laravel\QueryFilter;
 
-class AttributeMapper
+final class AttributeMapper
 {
     private array $map = [];
 
