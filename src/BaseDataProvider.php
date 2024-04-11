@@ -37,6 +37,8 @@ abstract class BaseDataProvider
 
     protected int $defaultPerPageLimit = 10;
 
+    protected int $maxPerPageLimit = 100;
+
     protected array $allowedFilter = [];
 
     protected array $allowedSort = [];
@@ -92,6 +94,7 @@ abstract class BaseDataProvider
             ->setPageLimit(
                 value: $this->request->input(static::ATTRIBUTE_LIMIT),
                 default: $this->defaultPerPageLimit,
+                max: $this->maxPerPageLimit,
             )
             ->paginate(
                 builder: $this->builder(),

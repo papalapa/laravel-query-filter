@@ -18,9 +18,10 @@ class Paginating
         return $this;
     }
 
-    final public function setPageLimit(mixed $value, int $default): static
+    final public function setPageLimit(mixed $value, int $default, int $max): static
     {
         $this->pageLimit = $this->validatePositiveValue($value, $default);
+        $this->pageLimit = min($this->pageLimit, $max);
 
         return $this;
     }
