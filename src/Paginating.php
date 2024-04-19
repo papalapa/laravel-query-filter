@@ -4,6 +4,7 @@ namespace Papalapa\Laravel\QueryFilter;
 
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class Paginating
 {
@@ -42,7 +43,12 @@ class Paginating
         }
 
         if ($this->pageNumber > 1) {
-            $this->pageNumber = (int) min(ceil($builder->count() / $this->pageLimit), $this->pageNumber);
+            /**
+             * Seems that `$total = $this->builder->count();` can be used as count of results.
+             * But it does not work if using `groupBy(...)`. And still works without grouping.
+             */
+            $total            = DB::connection()->table($builder->getQuery(), 'aggregate')->count();
+            $this->pageNumber = (int) min(ceil($total / $this->pageLimit), $this->pageNumber);
         }
 
         return $builder->paginate($this->pageLimit, ['*'], $pageName, $this->pageNumber);
