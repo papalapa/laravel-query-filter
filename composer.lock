@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09df622b99c4fab2dd85b78b3b39d4fc",
+    "content-hash": "1fe4200a79179b26c735b670ca88bd88",
     "packages": [
         {
             "name": "brick/math",
@@ -509,20 +509,20 @@
         },
         {
             "name": "illuminate/database",
-            "version": "v10.17.1",
+            "version": "v10.48.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/database.git",
-                "reference": "099b3078d98a2761a9b777ff78b3c4cfb9e69100"
+                "reference": "2246a636ba1f1e0cc6a5711f0e3929c6c303d937"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/database/zipball/099b3078d98a2761a9b777ff78b3c4cfb9e69100",
-                "reference": "099b3078d98a2761a9b777ff78b3c4cfb9e69100",
+                "url": "https://api.github.com/repos/illuminate/database/zipball/2246a636ba1f1e0cc6a5711f0e3929c6c303d937",
+                "reference": "2246a636ba1f1e0cc6a5711f0e3929c6c303d937",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.9.3|^0.10.2|^0.11",
+                "brick/math": "^0.9.3|^0.10.2|^0.11|^0.12",
                 "ext-pdo": "*",
                 "illuminate/collections": "^10.0",
                 "illuminate/container": "^10.0",
@@ -530,6 +530,10 @@
                 "illuminate/macroable": "^10.0",
                 "illuminate/support": "^10.0",
                 "php": "^8.1"
+            },
+            "conflict": {
+                "carbonphp/carbon-doctrine-types": ">=3.0",
+                "doctrine/dbal": ">=4.0"
             },
             "suggest": {
                 "doctrine/dbal": "Required to rename columns and drop SQLite columns (^3.5.1).",
@@ -574,7 +578,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2023-08-01T13:53:21+00:00"
+            "time": "2024-12-08T15:36:59+00:00"
         },
         {
             "name": "illuminate/filesystem",
@@ -642,16 +646,16 @@
         },
         {
             "name": "illuminate/http",
-            "version": "v10.17.1",
+            "version": "v10.34.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/http.git",
-                "reference": "e884a44ed33dc6fd0f9ad1257fc3f4ca055f4649"
+                "reference": "82fa4ac9e8f399e0fed326a11fd3ad66bf156de6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/http/zipball/e884a44ed33dc6fd0f9ad1257fc3f4ca055f4649",
-                "reference": "e884a44ed33dc6fd0f9ad1257fc3f4ca055f4649",
+                "url": "https://api.github.com/repos/illuminate/http/zipball/82fa4ac9e8f399e0fed326a11fd3ad66bf156de6",
+                "reference": "82fa4ac9e8f399e0fed326a11fd3ad66bf156de6",
                 "shasum": ""
             },
             "require": {
@@ -698,7 +702,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2023-08-02T14:11:43+00:00"
+            "time": "2023-11-27T14:33:02+00:00"
         },
         {
             "name": "illuminate/macroable",
@@ -4331,13 +4335,13 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.0",
         "ext-json": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
 }

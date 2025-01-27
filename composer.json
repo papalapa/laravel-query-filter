@@ -23,8 +23,8 @@
   "require": {
     "php": "^8.0",
     "ext-json": "*",
-    "illuminate/database": "^10.0",
-    "illuminate/http": "^10.0"
+    "illuminate/database": "^10.0|^11.0",
+    "illuminate/http": "^10.0|^11.0"
   },
   "suggest": {
     "laravel/framework": "This package working with Laravel query builders"
